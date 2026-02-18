@@ -1,42 +1,108 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>ระบบบันทึกหวย</title>
+<meta charset="UTF-8">
+<title>Lotto System</title>
+<style>
+body{font-family:Arial;padding:20px;max-width:900px;margin:auto}
+input{padding:6px;margin:4px}
+button{padding:6px 10px;cursor:pointer}
+table{border-collapse:collapse;width:100%;margin-top:20px}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+@media(max-width:600px){
+table,thead,tbody,th,td,tr{display:block}
+th{display:none}
+td{border:none;border-bottom:1px solid #ddd}
+}
+</style>
 </head>
 <body>
-  <h2>ฟอร์มบันทึกข้อมูลหวย</h2>
 
-  <label>ชื่อ:</label><br>
-  <input type="text" id="name"><br><br>
+<h2>งวด</h2>
+<input id="draw" placeholder="เช่น 1-3-2026">
 
-  <label>เลข:</label><br>
-  <input type="text" id="number"><br><br>
+<h2>เพิ่มข้อมูล</h2>
+<input id="name" placeholder="ชื่อ">
+<input id="number" placeholder="เลข">
+<input id="amount" type="number" placeholder="จำนวนเงิน">
+<button onclick="sendData()">บันทึก</button>
 
-  <label>จำนวนเงิน:</label><br>
-  <input type="number" id="amount"><br><br>
+<h3>รหัสลบ (1234)</h3>
+<input id="adminPass" type="password">
 
-  <button onclick="sendData()">บันทึก</button>
+<h2>รายการ</h2>
+<button onclick="loadData()">โหลดข้อมูล</button>
 
-  <p id="result"></p>
+<p><b>ยอดรวม:</b> <span id="total">0</span></p>
+
+<table>
+<thead>
+<tr>
+<th>วันที่</th>
+<th>ชื่อ</th>
+<th>เลข</th>
+<th>จำนวนเงิน</th>
+<th>ลบ</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
 
 <script>
-function sendData() {
-  fetch("https://script.google.com/macros/s/AKfycbyYHo67hnL--UIEtoKimixTnWdNsBHwvD_-YStAZqWqhGguwMQikep554ljkUfVCF89SA/exec", {
-    method: "POST",
-    body: JSON.stringify({
-      name: document.getElementById("name").value,
-      number: document.getElementById("number").value,
-      amount: document.getElementById("amount").value
-    })
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("result").innerText = "บันทึกสำเร็จ ✅";
-  })
-  .catch(err => {
-    document.getElementById("result").innerText = "เกิดข้อผิดพลาด ❌";
-  });
+const API="https://script.google.com/macros/s/AKfycbyYHo67hnL--UIEtoKimixTnWdNsBHwvD_-YStAZqWqhGguwMQikep554ljkUfVCF89SA/exec";
+const TOKEN="secure_token_2026";
+
+function sendData(){
+fetch(API,{
+method:"POST",
+body:JSON.stringify({
+token:TOKEN,
+draw:draw.value,
+name:name.value,
+number:number.value,
+amount:amount.value
+})
+})
+.then(r=>r.json())
+.then(()=>loadData());
+}
+
+function loadData(){
+fetch(API+"?draw="+draw.value+"&token="+TOKEN)
+.then(r=>r.json())
+.then(data=>{
+if(data.status) return alert(data.status);
+
+let sum=0;
+tableBody.innerHTML="";
+data.forEach(item=>{
+sum+=Number(item.amount);
+tableBody.innerHTML+=`
+<tr>
+<td>${new Date(item.date).toLocaleString()}</td>
+<td>${item.name}</td>
+<td>${item.number}</td>
+<td>${item.amount}</td>
+<td><button onclick="deleteRow(${item.row})">ลบ</button></td>
+</tr>`;
+});
+total.innerText=sum;
+});
+}
+
+function deleteRow(row){
+fetch(API,{
+method:"POST",
+body:JSON.stringify({
+token:TOKEN,
+action:"delete",
+draw:draw.value,
+row:row,
+password:adminPass.value
+})
+})
+.then(r=>r.json())
+.then(()=>loadData());
 }
 </script>
 
