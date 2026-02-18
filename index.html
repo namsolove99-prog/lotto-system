@@ -32,8 +32,10 @@ td{border:none;border-bottom:1px solid #ddd}
 
 <h2>รายการ</h2>
 <button onclick="loadData()">โหลดข้อมูล</button>
+<button onclick="loadSummary()">ดูสรุป</button>
 
 <p><b>ยอดรวม:</b> <span id="total">0</span></p>
+<div id="summaryBox"></div>
 
 <table>
 <thead>
@@ -72,7 +74,6 @@ fetch(API+"?draw="+draw.value+"&token="+TOKEN)
 .then(r=>r.json())
 .then(data=>{
 if(data.status) return alert(data.status);
-
 let sum=0;
 tableBody.innerHTML="";
 data.forEach(item=>{
@@ -103,6 +104,20 @@ password:adminPass.value
 })
 .then(r=>r.json())
 .then(()=>loadData());
+}
+
+function loadSummary(){
+fetch(API+"?draw="+draw.value+"&token="+TOKEN+"&type=summary")
+.then(r=>r.json())
+.then(data=>{
+let html="<h3>สรุปงวด</h3>";
+html+="ยอดรวมทั้งหมด: "+data.total+"<br><br>";
+html+="ยอดตามเลข:<br>";
+for(let n in data.numbers){
+html+=n+" = "+data.numbers[n]+"<br>";
+}
+summaryBox.innerHTML=html;
+});
 }
 </script>
 
